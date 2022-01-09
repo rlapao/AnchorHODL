@@ -15,6 +15,7 @@ from datetime import datetime
 from send_notification import slack_webhook, telegram_notification
 import os
 import logging.config
+import traceback
 
 # Logging INIT
 if not os.path.exists('./logs'):
@@ -67,6 +68,8 @@ def keep_loan_safe(anchor_hodl, current_ltv):
                 # if aSUT in earn is less than $10
                 if aust_balance < 10:
                     logger.error(f"Not much deposited in Anchor. Can't use it for repay.")
+                    if config.NOTIFY_TELEGRAM:
+                        telegram_notification(f"Not much deposited in Anchor. Can't use it for repay.")
                     return False
 
                 aust_rate = get_aUST_rate(anchor_hodl)
@@ -76,6 +79,9 @@ def keep_loan_safe(anchor_hodl, current_ltv):
                 if not aust_balance >= aust_repay_amount:
                     logger.warning(f"aUST is not enough. Required: {aust_repay_amount}, Available: {aust_balance}. "
                                    f"Will withdraw all {aust_balance} balance")
+                    if config.NOTIFY_TELEGRAM:
+                        telegram_notification(f"aUST is not enough. Required: {aust_repay_amount}, Available: {aust_balance}. "
+                                              f"Will withdraw all {aust_balance} balance")
                     aust_repay_amount = aust_balance
 
                 # withdraw
@@ -112,6 +118,8 @@ def keep_loan_safe(anchor_hodl, current_ltv):
                              f"triggered at: {current_ltv['left_to_trigger']} " \
                              f"({config.trigger_at_percent}% trigger limit). " \
                              f"TX: {anchor_hodl.tx_look_up}{broadcast_result.txhash}"
+                if config.NOTIFY_TELEGRAM:
+                    telegram_notification(borrow_log)
                 logger.info(borrow_log)
 
             return True
@@ -156,6 +164,7 @@ def get_ltv(anchor_hodl):
         },
     }
     borrow_limit_result = anchor_hodl.terra.wasm.contract_query(anchor_hodl.mmOverseer, query_msg_borrow_limit)
+    logger.debug(borrow_limit_result)
 
     # https://github.com/Anchor-Protocol/money-market-contracts/blob/main/contracts/market/src/borrow.rs#L376
     query_msg_loan = {
@@ -166,6 +175,7 @@ def get_ltv(anchor_hodl):
     }
 
     loan_amount_result = anchor_hodl.terra.wasm.contract_query(anchor_hodl.mmMarket, query_msg_loan)
+    logger.debug(loan_amount_result)
 
     query_msg_anchor_deposited = {
         "balance": {
@@ -173,6 +183,7 @@ def get_ltv(anchor_hodl):
         },
     }
     total_deposited_amount = anchor_hodl.terra.wasm.contract_query(anchor_hodl.aTerra, query_msg_anchor_deposited)
+    logger.debug(total_deposited_amount)
 
     loan_amount = int(loan_amount_result['loan_amount']) / 1000000
     borrow_limit = int(borrow_limit_result['borrow_limit']) / 1000000
@@ -284,7 +295,7 @@ def contract_executor(anchor_hodl, contract_addr, execute_msg, send_coins):
     try:
         tx = anchor_hodl.wallet.create_and_sign_tx(
             msgs=[execute],
-            fee=StdFee(600000, "2500000uusd"),
+            fee=StdFee(600000, "2000000uusd"),
             memo="AnchorHODL!",
             # fee_denoms=["uusd"],
             # sequence=sequence
@@ -292,5 +303,6 @@ def contract_executor(anchor_hodl, contract_addr, execute_msg, send_coins):
         return tx
 
     except Exception as err:
-        logger.error(f"Error: {err}")
+        logger.error(f"Error #1: {err}")
+        logger.error(traceback.format_exc())
         pass

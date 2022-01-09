@@ -7,6 +7,8 @@ import config
 import anchorprotocol
 import logging_config
 import logging.config
+from send_notification import slack_webhook, telegram_notification
+import traceback
 
 logging.config.dictConfig(logging_config.LOGGING)
 logger = logging.getLogger(__name__)
@@ -66,12 +68,19 @@ class Terra:
     def is_loan_safe(self):
         try:
             current_ltv = anchorprotocol.get_ltv(self)
+            if current_ltv['left_to_trigger'] < 5:
+                if config.NOTIFY_TELEGRAM:
+                    telegram_notification(f"Less than 5% to repay \U0001F53D.")
+            if current_ltv['left_to_trigger'] > 25:
+                if config.NOTIFY_TELEGRAM:
+                    telegram_notification(f"Less than 5% to borrow \U0001F53C.")
             is_loan_safe = anchorprotocol.keep_loan_safe(self, current_ltv)
             if not is_loan_safe:
                 logger.error(f'keep_loan_safe() function has failed for some reason. Please, investigate and check logs.')
 
         except Exception as err:
-            logger.error(err)
+            logger.error(f"Error #2: {err}")
+            logger.error(traceback.format_exc())
             pass
 
 
@@ -80,7 +89,8 @@ if __name__ == '__main__':
         anchor_hodl = Terra()
         anchor_hodl.is_loan_safe()
     except Exception as err:
-        logger.error(err)
+        logger.error(f"Error #3: {err}")
+        logger.error(traceback.format_exc())
         pass
 
 

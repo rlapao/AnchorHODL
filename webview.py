@@ -5,6 +5,8 @@ from flask import Response, render_template
 from apscheduler.schedulers.background import BackgroundScheduler
 from terraswap_swap_watch import run_terra_swap_price_watcher, get_luna_price_prices
 from hodl import Terra
+import config
+from send_notification import slack_webhook, telegram_notification
 
 # I hope you are not reading this source! This "API" is really not ideal but it work!
 # Apologies for this nasty laziness subprocess usage!
@@ -25,6 +27,9 @@ def tail():
     repay_log = []
     apscheduler_log = []
     page_tile = 'null'
+
+    if config.NOTIFY_TELEGRAM:
+        telegram_notification(f"Starting patinhas...")
 
     if os.path.exists('./logs/info.log'):
         arguments = ['tail', '-n', '10', './logs/info.log']

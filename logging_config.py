@@ -22,7 +22,7 @@ LOGGING = {
     },
     'handlers': {
         'default': {
-            'level': 'INFO',
+            'level': 'DEBUG',
             'class': 'logging.handlers.RotatingFileHandler',
             'filename': 'logs/info.log',
             'maxBytes': 1024*1024*5,  # 5MB
@@ -36,7 +36,7 @@ LOGGING = {
             'stream': 'ext://sys.stdout',
         },
         'repaying': {
-            'level': 'INFO',
+            'level': 'DEBUG',
             'class': 'logging.handlers.RotatingFileHandler',
             'filename': 'logs/repayments.log',
             'maxBytes': 1024 * 1024 * 5,  # 5MB
@@ -44,14 +44,14 @@ LOGGING = {
             'formatter': 'info_logger_format'
         },
         'apscheduler': {
-            'level': 'INFO',
+            'level': 'DEBUG',
             'class': 'logging.handlers.RotatingFileHandler',
             'filename': 'logs/apscheduler.log',
             'maxBytes': 1024 * 1024 * 5,  # 5MB
             'backupCount': 5,
         },
         'werkzeug': {
-            'level': 'INFO',
+            'level': 'DEBUG',
             'class': 'logging.handlers.RotatingFileHandler',
             'filename': 'logs/werkzeug.log',
             'maxBytes': 1024 * 1024 * 5,  # 5MB
@@ -61,22 +61,22 @@ LOGGING = {
     'loggers': {
         '': {
             'handlers': ['default', 'debug_console_handler'],
-            'level': 'INFO',
+            'level': 'DEBUG',
             'propagate': True,
         },
         'repaying': {
             'handlers': ['repaying'],
-            'level': 'INFO',
+            'level': 'DEBUG',
             'propagate': False,
         },
         'apscheduler': {
             'handlers': ['apscheduler'],
-            'level': 'INFO',
+            'level': 'DEBUG',
             'propagate': False,
         },
         'werkzeug': {
             'handlers': ['werkzeug'],
-            'level': 'INFO',
+            'level': 'DEBUG',
             'propagate': False,
         },
         'urllib3.connectionpool': {
